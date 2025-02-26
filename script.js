@@ -30,6 +30,13 @@ document.addEventListener("DOMContentLoaded", function () {
     // Add this to global variables section
     let currentMainArticle = null; // Track the current article in main view
   
+    // Add this to global variables section at the top of your file
+    let isCategoryScrolling = false;
+    let categoryScrollTimeout = null;
+  
+    // Add this to global variables section
+    let articleCategoryCache = {}; // Cache to store article title -> category mapping
+  
     // Helper function to update all article cards to the current mode:
     function updateAllCardsViewMode() {
       document.querySelectorAll(".article-card").forEach((card) => {
@@ -179,9 +186,34 @@ document.addEventListener("DOMContentLoaded", function () {
     // PRELOAD CATEGORY FOR AN ARTICLE
     // --------------------
     function preloadCategoryForArticle(article, card = null) {
-      // Get the category and preload it
-      getMainCategory(article).then((category) => {
+      // Check if we already have the category for this article
+      if (articleCategoryCache[article.title]) {
+        const cachedCategory = articleCategoryCache[article.title];
+        
+        // If we have a card, set its dataset
+        if (card) {
+          card.dataset.category = cachedCategory;
+        }
+        
+        // Preload the category members if not already preloaded
+        if (!preloadedCategories[cachedCategory]) {
+          fetchCategoryMembers(cachedCategory).then((members) => {
+            preloadedCategories[cachedCategory] = members;
+            
+            // Also preload the first article for this category
+            preloadFirstCategoryArticle(cachedCategory);
+          });
+        }
+        
+        return Promise.resolve(cachedCategory);
+      }
+      
+      // If not cached, get the category and preload it
+      return getMainCategory(article).then((category) => {
         if (category) {
+          // Cache the category for this article
+          articleCategoryCache[article.title] = category;
+          
           // If we have a card, set its dataset
           if (card) {
             card.dataset.category = category;
@@ -197,6 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
           }
         }
+        return category;
       });
     }
   
@@ -210,10 +243,10 @@ document.addEventListener("DOMContentLoaded", function () {
           if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
             currentMainArticle = article;
             
-            // If category overlay exists but is for a different category,
-            // update it to show the current article's category
+            // Only update the category overlay if it exists AND we're not actively scrolling in it
             if (currentCategoryOverlay && card.dataset.category && 
-                card.dataset.category !== currentCategoryName) {
+                card.dataset.category !== currentCategoryName && 
+                !isCategoryScrolling) {  // Add this check
               // Update the category overlay to match the current article
               updateCategoryOverlay(card.dataset.category);
             }
@@ -233,6 +266,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // FETCH MAIN CATEGORY FOR AN ARTICLE
     // --------------------
     async function getMainCategory(article) {
+      // Check if we already have the category for this article
+      if (articleCategoryCache[article.title]) {
+        return articleCategoryCache[article.title];
+      }
+      
       try {
         const url = `https://en.wikipedia.org/w/api.php?action=query&prop=categories&titles=${encodeURIComponent(article.title)}&format=json&origin=*&cllimit=10&clshow=!hidden`;
         const response = await fetch(url);
@@ -245,6 +283,10 @@ document.addEventListener("DOMContentLoaded", function () {
           if (catTitle.startsWith("Category:")) {
             catTitle = catTitle.replace("Category:", "");
           }
+          
+          // Cache the result
+          articleCategoryCache[article.title] = catTitle;
+          
           return catTitle;
         } else {
           return null;
@@ -409,6 +451,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       
       async function createTemporaryCategoryOverlay(article) {
+  
         let category = element.dataset.category;
         if (!category) {
           category = await getMainCategory(article);
@@ -689,9 +732,36 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   
+    // Modify the preloadCategoryFeedArticles function to add scroll event listeners
     async function preloadCategoryFeedArticles(catContainer, count) {
       console.log("Preloading category feed articles for", currentCategoryName)
       console.log("cat container and count are", catContainer, count)
+      
+      // Add scroll tracking if not already added
+      if (!catContainer.hasScrollListener) {
+        catContainer.addEventListener("scroll", function() {
+          // Set scrolling flag to true when scrolling starts
+          isCategoryScrolling = true;
+          
+          // Clear any existing timeout
+          if (categoryScrollTimeout) {
+            clearTimeout(categoryScrollTimeout);
+          }
+          
+          // Set a timeout to reset the scrolling flag after scrolling stops
+          categoryScrollTimeout = setTimeout(() => {
+            isCategoryScrolling = false;
+          }, 500); // 500ms after scrolling stops
+          
+          // Original scroll logic for infinite loading
+          if (catContainer.scrollTop + catContainer.clientHeight >= catContainer.scrollHeight - 50) {
+            preloadCategoryFeedArticles(catContainer, 5);
+          }
+        });
+        
+        catContainer.hasScrollListener = true;
+      }
+      
       if (categoryMembers.length === 0) {
         categoryMembers = await fetchCategoryMembers(currentCategoryName);
         categoryMembers.sort(() => Math.random() - 0.5);
