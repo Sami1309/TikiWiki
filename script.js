@@ -431,6 +431,14 @@ document.addEventListener("DOMContentLoaded", function () {
         if (preloadedCategories[category].preloadedFirstArticle) {
           const card = createArticleCard(preloadedCategories[category].preloadedFirstArticle);
           catContainer.appendChild(card);
+          
+          // Mark this article as used by removing it from the category members
+          // or filtering it out when we load more
+          const firstArticleTitle = preloadedCategories[category].preloadedFirstArticle.title;
+          categoryMembers = categoryMembers.filter(member => 
+            member.title !== firstArticleTitle
+          );
+          
           loadingIndicator.style.display = "none";
         } else {
           // Otherwise load the first article now
@@ -668,18 +676,37 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       
+      // Keep track of article titles we've already displayed
+      const displayedTitles = new Set();
+      
+      // Add existing article titles to our tracking set
+      Array.from(catContainer.querySelectorAll('.article-card')).forEach(card => {
+        const titleElement = card.querySelector('.article-title a');
+        if (titleElement && titleElement.textContent) {
+          displayedTitles.add(titleElement.textContent);
+        }
+      });
+      
       let loaded = 0;
       while (loaded < count && categoryMembers.length > 0) {
         const member = categoryMembers.pop();
         if (member.ns !== 0) continue; // skip non-main articles
+        
         try {
           const response = await fetch(
             `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(member.title)}`
           );
           const article = await response.json();
+          
+          // Skip this article if we've already displayed it
+          if (displayedTitles.has(article.title)) {
+            continue;
+          }
+          
           if (article && article.thumbnail && article.thumbnail.source) {
             const card = createArticleCard(article);
             catContainer.appendChild(card);
+            displayedTitles.add(article.title);
             loaded++;
           }
         } catch (error) {
