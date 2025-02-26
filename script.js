@@ -439,8 +439,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   
     function closeCategoryFeed() {
-      if (!currentCategoryOverlay) return;
-      currentCategoryOverlay.classList.remove("visible");
+      if (currentCategoryOverlay) {
+        document.body.removeChild(currentCategoryOverlay);
+        currentCategoryOverlay = null;
+        categoryMembers = [];
+        currentCategoryName = "";
+      }
     }
   
     // Replace the attachSmoothSwipeDetection function with this updated version
