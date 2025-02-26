@@ -130,11 +130,13 @@ document.addEventListener("DOMContentLoaded", function () {
       const likedArticles = JSON.parse(localStorage.getItem("likedArticles")) || [];
       const isLiked = likedArticles.some(a => a.title === article.title);
       
+      // Use the same character (filled heart) for both states
+      heartIcon.innerHTML = "♥"; // Always use filled heart
+      
       if (isLiked) {
         heartIcon.classList.add("liked");
-        heartIcon.innerHTML = "♥"; // Filled heart
       } else {
-        heartIcon.innerHTML = "♡"; // Empty heart
+        heartIcon.classList.add("unliked"); // Add a class for the unliked state
       }
       
       // Event listeners
@@ -153,12 +155,12 @@ document.addEventListener("DOMContentLoaded", function () {
           // Unlike the article
           unlikeArticle(article);
           heartIcon.classList.remove("liked");
-          heartIcon.innerHTML = "♡"; // Empty heart
+          heartIcon.classList.add("unliked");
         } else {
           // Like the article
           likeArticle(article);
           heartIcon.classList.add("liked");
-          heartIcon.innerHTML = "♥"; // Filled heart
+          heartIcon.classList.remove("unliked");
         }
         
         updateLikedButtonState(); // Update button state

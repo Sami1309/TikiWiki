@@ -336,6 +336,11 @@
     color: #ff3b30; /* Red color when liked */
     font-size: 28px; /* Same size as the empty heart */
   }
+
+  .heart-icon.unliked {
+    color: rgba(255, 255, 255, 0.5); /* Semi-transparent white for unliked */
+    opacity: 0.7; /* Slightly more transparent */
+  }
   
   /* Disabled state for View Liked button */
   #view-liked-btn.disabled {
