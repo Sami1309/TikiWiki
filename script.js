@@ -99,9 +99,30 @@ document.addEventListener("DOMContentLoaded", function () {
       const card = document.createElement("div");
       card.className = "article-card";
   
+      // If the article has an image, show a black background with a spinner while loading
       if (article.originalimage && article.originalimage.source) {
-        card.style.backgroundImage = `url(${article.originalimage.source})`;
+        // Set a plain black background
+        card.style.backgroundColor = "#000";
+  
+        // Create the spinner element
+        const spinner = document.createElement("div");
+        spinner.className = "spinner";
+        card.appendChild(spinner);
+  
+        // Create an Image object to preload the image
+        const img = new Image();
+        img.src = article.originalimage.source;
+        img.onload = function () {
+          // Remove the spinner and set the card's background image
+          card.style.backgroundImage = `url(${article.originalimage.source})`;
+          spinner.remove();
+        };
+        img.onerror = function () {
+          // If the image fails to load, remove the spinner
+          spinner.remove();
+        };
       } else {
+        // If there's no image, default to a fallback background color.
         card.style.backgroundColor = "#333";
       }
   
@@ -216,10 +237,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const card = createArticleCard(article);
         container.appendChild(card);
   
-        if (
-          container.scrollHeight <= container.clientHeight &&
-          articleQueue.length > 0
-        ) {
+        // Remove the initial loader overlay once the first article is added.
+        removeInitialLoader();
+  
+        if (container.scrollHeight <= container.clientHeight && articleQueue.length > 0) {
           addNextArticle();
         }
       }
@@ -1159,5 +1180,13 @@ document.addEventListener("DOMContentLoaded", function () {
   
     // Set initial state of the View Liked button
     updateLikedButtonState();
+
+    // Helper function to remove the initial loader overlay.
+    function removeInitialLoader() {
+      const loader = document.getElementById("initial-loader");
+      if (loader) {
+        loader.remove();
+      }
+    }
   });
   
