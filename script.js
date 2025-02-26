@@ -105,17 +105,6 @@ document.addEventListener("DOMContentLoaded", function () {
         card.style.backgroundColor = "#333";
       }
   
-      const likeBtn = document.createElement("button");
-      likeBtn.className = "like-button";
-      likeBtn.textContent = "Like";
-      likeBtn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        likeArticle(article);
-        likeBtn.textContent = "Liked";
-        likeBtn.disabled = true;
-      });
-      card.appendChild(likeBtn);
-  
       const overlay = document.createElement("div");
       overlay.className = "article-overlay";
   
@@ -129,6 +118,52 @@ document.addEventListener("DOMContentLoaded", function () {
         e.stopPropagation();
       });
       title.appendChild(link);
+      
+      // Add heart icon for liking
+      const heartIcon = document.createElement("div");
+      heartIcon.className = "heart-icon";
+      
+      // Check if this article is already liked
+      const likedArticles = JSON.parse(localStorage.getItem("likedArticles")) || [];
+      const isLiked = likedArticles.some(a => a.title === article.title);
+      
+      if (isLiked) {
+        heartIcon.classList.add("liked");
+        heartIcon.innerHTML = "♥"; // Filled heart
+      } else {
+        heartIcon.innerHTML = "♡"; // Empty heart
+      }
+      
+      heartIcon.addEventListener("pointerdown", function(e) {
+        console.log("heart icon pointerdown");
+        e.stopPropagation();
+      });
+      
+      heartIcon.addEventListener("click", function(e) {
+        console.log("heart icon clicked");
+        e.stopPropagation();
+        e.preventDefault();
+        
+        // Toggle like state
+        if (heartIcon.classList.contains("liked")) {
+          // Unlike the article
+          unlikeArticle(article);
+          heartIcon.classList.remove("liked");
+          heartIcon.innerHTML = "♡"; // Empty heart
+        } else {
+          // Like the article
+          likeArticle(article);
+          heartIcon.classList.add("liked");
+          heartIcon.innerHTML = "♥"; // Filled heart
+        }
+        
+        updateLikedButtonState(); // Update button state
+      });
+      
+      // Make sure the heart icon is positioned properly and has proper z-index
+      heartIcon.style.zIndex = "100"; // Ensure it's above other elements
+      
+      title.appendChild(heartIcon);
       overlay.appendChild(title);
   
       const text = document.createElement("p");
@@ -180,6 +215,13 @@ document.addEventListener("DOMContentLoaded", function () {
         liked.push(article);
         localStorage.setItem("likedArticles", JSON.stringify(liked));
       }
+    }
+  
+    // Add this function to unlike an article
+    function unlikeArticle(article) {
+      let liked = JSON.parse(localStorage.getItem("likedArticles")) || [];
+      liked = liked.filter(a => a.title !== article.title);
+      localStorage.setItem("likedArticles", JSON.stringify(liked));
     }
   
     // --------------------
@@ -947,16 +989,97 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("view-liked-btn").addEventListener("click", function () {
       const liked = JSON.parse(localStorage.getItem("likedArticles")) || [];
       if (liked.length === 0) {
-        alert("No liked articles yet!");
+        // Do nothing if there are no liked articles
+        return;
       } else {
-        const titles = liked.map((a) => a.title).join("\n");
-        alert("Liked Articles:\n" + titles);
+        // Create liked articles overlay
+        let likedOverlay = document.getElementById("liked-overlay");
+        
+        // If overlay doesn't exist, create it
+        if (!likedOverlay) {
+          likedOverlay = document.createElement("div");
+          likedOverlay.id = "liked-overlay";
+          
+          const header = document.createElement("div");
+          header.className = "liked-header";
+          header.textContent = "Liked Articles";
+          likedOverlay.appendChild(header);
+          
+          const closeBtn = document.createElement("button");
+          closeBtn.className = "close-liked-btn";
+          closeBtn.innerHTML = "×";
+          closeBtn.addEventListener("click", function() {
+            document.body.removeChild(likedOverlay); // Just remove, no animation
+          });
+          likedOverlay.appendChild(closeBtn);
+          
+          const likedContainer = document.createElement("div");
+          likedContainer.className = "liked-container";
+          likedOverlay.appendChild(likedContainer);
+          
+          document.body.appendChild(likedOverlay);
+        }
+        
+        // Get the container and clear it
+        const likedContainer = likedOverlay.querySelector(".liked-container");
+        likedContainer.innerHTML = "";
+        
+        // Add each liked article to the container
+        liked.forEach(article => {
+          const articleItem = document.createElement("div");
+          articleItem.className = "liked-article-item";
+          
+          // Create thumbnail if available
+          if (article.thumbnail && article.thumbnail.source) {
+            const thumbnail = document.createElement("div");
+            thumbnail.className = "liked-article-thumbnail";
+            thumbnail.style.backgroundImage = `url(${article.thumbnail.source})`;
+            articleItem.appendChild(thumbnail);
+          }
+          
+          // Create article info
+          const info = document.createElement("div");
+          info.className = "liked-article-info";
+          
+          const title = document.createElement("h3");
+          const link = document.createElement("a");
+          link.href = article.content_urls.desktop.page;
+          link.target = "_blank";
+          link.textContent = article.title;
+          title.appendChild(link);
+          info.appendChild(title);
+          
+          const excerpt = document.createElement("p");
+          excerpt.textContent = article.extract.substring(0, 100) + "...";
+          info.appendChild(excerpt);
+          
+          articleItem.appendChild(info);
+          likedContainer.appendChild(articleItem);
+        });
+        
+        // Show the overlay
+        likedOverlay.classList.add("visible");
       }
     });
+  
+    // Add this new function to update the View Liked button state
+    function updateLikedButtonState() {
+      const likedBtn = document.getElementById("view-liked-btn");
+      const likedArticles = JSON.parse(localStorage.getItem("likedArticles")) || [];
+      
+      if (likedArticles.length === 0) {
+        likedBtn.classList.add("disabled");
+      } else {
+        likedBtn.classList.remove("disabled");
+      }
+    }
   
     // --------------------
     // INITIALIZE MAIN FEED
     // --------------------
     preloadArticles(PRELOAD_COUNT);
+  
+    // Set initial state of the View Liked button
+    updateLikedButtonState();
   });
   
