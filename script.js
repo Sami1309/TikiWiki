@@ -119,7 +119,10 @@ document.addEventListener("DOMContentLoaded", function () {
       });
       title.appendChild(link);
       
-      // Add heart icon for liking
+      // Add title to the overlay
+      overlay.appendChild(title);
+      
+      // Create heart icon as a separate element in the overlay
       const heartIcon = document.createElement("div");
       heartIcon.className = "heart-icon";
       
@@ -134,6 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
         heartIcon.innerHTML = "♡"; // Empty heart
       }
       
+      // Event listeners
       heartIcon.addEventListener("pointerdown", function(e) {
         console.log("heart icon pointerdown");
         e.stopPropagation();
@@ -160,12 +164,8 @@ document.addEventListener("DOMContentLoaded", function () {
         updateLikedButtonState(); // Update button state
       });
       
-      // Make sure the heart icon is positioned properly and has proper z-index
-      heartIcon.style.zIndex = "100"; // Ensure it's above other elements
+      overlay.appendChild(heartIcon);
       
-      title.appendChild(heartIcon);
-      overlay.appendChild(title);
-  
       const text = document.createElement("p");
       text.className = "article-text";
       text.textContent = article.extract;

@@ -311,29 +311,30 @@
   /* Heart icon for liking articles */
   .heart-icon {
     position: absolute;
-    bottom: 20px; /* Adjust as needed for vertical alignment with title */
-    right: 15px;
-    font-size: 28px;
+    top: 20px; /* Position at the same level as the title */
+    right: 20px; /* Position on the right side */
+    font-size: 28px; /* Consistent font size for both states */
     cursor: pointer;
     color: white;
     transition: all 0.2s ease;
-    z-index: 20; /* Ensure it's above other elements */
+    z-index: 100; /* Ensure it's above other elements */
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     user-select: none;
-    width: 28px; /* Fixed width.  Match font size */
-    height: 28px; /* Fixed height. Match font size */
+    width: 40px; /* Fixed width to ensure consistent sizing */
+    height: 40px; /* Fixed height to ensure consistent sizing */
     display: flex;
     align-items: center;
     justify-content: center;
+    line-height: 1; /* Ensure consistent line height */
   }
   
   .heart-icon:hover {
-    /*  transform: scale(1.2); Remove to prevent size change */
     color: rgba(255, 0, 0, 0.7);
   }
   
   .heart-icon.liked {
     color: #ff3b30; /* Red color when liked */
+    font-size: 28px; /* Same size as the empty heart */
   }
   
   /* Disabled state for View Liked button */
