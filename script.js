@@ -37,6 +37,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // Add this to global variables section
     let articleCategoryCache = {}; // Cache to store article title -> category mapping
   
+    // New global flag to prevent immediate re-opening
+    let recentlyClosedCategory = false;
+  
     // Helper function to update all article cards to the current mode:
     function updateAllCardsViewMode() {
       document.querySelectorAll(".article-card").forEach((card) => {
@@ -447,6 +450,11 @@ document.addEventListener("DOMContentLoaded", function () {
         currentCategoryOverlay = null;
         categoryMembers = [];
         currentCategoryName = "";
+        // Set flag so that accidental swipe-to-open is ignored for a moment.
+        recentlyClosedCategory = true;
+        setTimeout(() => {
+          recentlyClosedCategory = false;
+        }, 500); // 500ms timeout (adjust as needed)
       }
     }
   
@@ -522,16 +530,18 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // REVERSED DIRECTION: Swipe LEFT on main feed to open category
         if (type === "main" && dx < 0) {
-          // Swiping left on main feed - prepare to open category
-          const percentage = Math.min(Math.abs(dx) / window.innerWidth, 1);
-          currentX = percentage * 100;
-          
-          // Apply transform to the category overlay (which should be created temporarily)
-          if (!currentCategoryOverlay && article) {
-            // Create temporary overlay for animation
+          // Only create the temporary overlay if:
+          // (a) we haven't just closed a category,
+          // (b) there isn't one already, and
+          // (c) the horizontal movement is significant (here >30px)
+          if (!currentCategoryOverlay && article && !recentlyClosedCategory && Math.abs(dx) > 30) {
             createTemporaryCategoryOverlay(article);
           }
           
+          const percentage = Math.min(Math.abs(dx) / window.innerWidth, 1);
+          currentX = percentage * 100;
+          
+          // Apply transform to the category overlay (if it exists)
           if (currentCategoryOverlay) {
             currentCategoryOverlay.style.transition = "none";
             currentCategoryOverlay.style.left = `${100 - currentX}vw`;
@@ -753,13 +763,12 @@ document.addEventListener("DOMContentLoaded", function () {
               currentX = 0;
             }
             
-            // Accumulate the swipe distance
             currentX += Math.min(e.deltaX / 10, 5); // Scale the movement
             
             if (currentX >= window.innerWidth * 0.2) {
-              // If we've moved enough, trigger the category open
-              if (!currentCategoryOverlay && element.dataset.category) {
-                createTemporaryCategoryOverlay({title: element.dataset.category});
+              // Check that we don't re-open immediately after closing the overlay
+              if (!currentCategoryOverlay && element.dataset.category && !recentlyClosedCategory) {
+                createTemporaryCategoryOverlay({ title: element.dataset.category });
                 animateToPosition(currentX, 100, async function() {
                   if (currentCategoryOverlay) {
                     currentCategoryOverlay.style.transition = "";
@@ -785,8 +794,6 @@ document.addEventListener("DOMContentLoaded", function () {
                       });
                     }
                   }
-                  locked = false;
-                  currentX = 0;
                 });
               }
             }
@@ -799,11 +806,9 @@ document.addEventListener("DOMContentLoaded", function () {
               currentX = 0;
             }
             
-            // Accumulate the swipe distance
-            currentX += Math.min(Math.abs(e.deltaX) / 10, 5); // Scale the movement
+            currentX += Math.min(Math.abs(e.deltaX) / 10, 5);
             
             if (currentX >= window.innerWidth * 0.2) {
-              // If we've moved enough, trigger the category close
               animateToPosition(0, 100, function() {
                 closeCategoryFeed();
                 locked = false;
