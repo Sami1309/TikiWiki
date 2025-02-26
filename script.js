@@ -27,6 +27,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let categoryPreloadQueue = [];
     const CATEGORY_AHEAD_PRELOAD = 5; // Number of upcoming articles to preload categories for
   
+    // Add this to global variables section
+    let currentMainArticle = null; // Track the current article in main view
+  
     // Helper function to update all article cards to the current mode:
     function updateAllCardsViewMode() {
       document.querySelectorAll(".article-card").forEach((card) => {
@@ -62,6 +65,10 @@ document.addEventListener("DOMContentLoaded", function () {
           const article = await fetchRandomArticle();
           if (article) {
             articleQueue.push(article);
+            
+            // Preload the category for this article immediately
+            // instead of waiting for the card to be created
+            preloadCategoryForArticle(article);
             
             // Add this article to the category preload queue
             categoryPreloadQueue.push(article);
@@ -171,25 +178,54 @@ document.addEventListener("DOMContentLoaded", function () {
     // --------------------
     // PRELOAD CATEGORY FOR AN ARTICLE
     // --------------------
-    function preloadCategoryForArticle(article, card) {
-      if (!card.dataset.category) {
-        getMainCategory(article).then((category) => {
-          if (category) {
+    function preloadCategoryForArticle(article, card = null) {
+      // Get the category and preload it
+      getMainCategory(article).then((category) => {
+        if (category) {
+          // If we have a card, set its dataset
+          if (card) {
             card.dataset.category = category;
-            if (!preloadedCategories[category]) {
-              fetchCategoryMembers(category).then((members) => {
-                preloadedCategories[category] = members;
-              });
-            }
           }
-        });
-      }
+          
+          // Preload the category members if not already preloaded
+          if (!preloadedCategories[category]) {
+            fetchCategoryMembers(category).then((members) => {
+              preloadedCategories[category] = members;
+              
+              // Also preload the first article for this category
+              preloadFirstCategoryArticle(category);
+            });
+          }
+        }
+      });
     }
   
     // --------------------
     // SWIPE DETECTION ON MAIN FEED CARDS
     // --------------------
     function attachSwipeDetection(card, article) {
+      // Set this card's article as the current one when it becomes visible
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+            currentMainArticle = article;
+            
+            // If category overlay exists but is for a different category,
+            // update it to show the current article's category
+            if (currentCategoryOverlay && card.dataset.category && 
+                card.dataset.category !== currentCategoryName) {
+              // Update the category overlay to match the current article
+              updateCategoryOverlay(card.dataset.category);
+            }
+          }
+        });
+      }, {
+        threshold: 0.5 // Trigger when card is at least 50% visible
+      });
+      
+      observer.observe(card);
+      
+      // Attach the swipe detection as before
       attachSmoothSwipeDetection(card, "main", article);
     }
   
@@ -225,6 +261,7 @@ document.addEventListener("DOMContentLoaded", function () {
     async function openCategoryFeed(category) {
       if (currentCategoryOverlay) return; // already open
       currentCategoryName = category;
+      console.log("Current category name is", currentCategoryName)
       if (preloadedCategories[category]) {
         categoryMembers = preloadedCategories[category].slice();
       } else {
@@ -665,6 +702,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   
     async function preloadCategoryFeedArticles(catContainer, count) {
+      console.log("Preloading category feed articles for", currentCategoryName)
+      console.log("cat container and count are", catContainer, count)
       if (categoryMembers.length === 0) {
         categoryMembers = await fetchCategoryMembers(currentCategoryName);
         categoryMembers.sort(() => Math.random() - 0.5);
@@ -767,6 +806,71 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
       }
+    }
+  
+    // New function to update the category overlay when the main article changes
+    async function updateCategoryOverlay(newCategory) {
+      if (!currentCategoryOverlay || newCategory === currentCategoryName) return;
+      
+      console.log(`Updating category overlay from ${currentCategoryName} to ${newCategory}`);
+      
+      // Update the current category name
+      currentCategoryName = newCategory;
+      
+      // Update the header text
+      const header = currentCategoryOverlay.querySelector('.category-header');
+      if (header) {
+        header.textContent = `Category: ${newCategory}`;
+      }
+      
+      // Get the category container
+      const catContainer = document.getElementById("category-container");
+      if (!catContainer) return;
+      
+      // Show loading indicator
+      let loadingIndicator = currentCategoryOverlay.querySelector('.category-loading');
+      if (!loadingIndicator) {
+        loadingIndicator = document.createElement("div");
+        loadingIndicator.className = "category-loading";
+        loadingIndicator.textContent = "Loading articles...";
+        currentCategoryOverlay.appendChild(loadingIndicator);
+      } else {
+        loadingIndicator.style.display = "block";
+      }
+      
+      // Clear existing articles
+      catContainer.innerHTML = '';
+      catContainer.classList.add("loading");
+      
+      // Load new category members
+      if (preloadedCategories[newCategory]) {
+        categoryMembers = preloadedCategories[newCategory].slice();
+      } else {
+        categoryMembers = await fetchCategoryMembers(newCategory);
+        preloadedCategories[newCategory] = categoryMembers.slice();
+      }
+      
+      // Load the first article (use preloaded if available)
+      if (preloadedCategories[newCategory].preloadedFirstArticle) {
+        const card = createArticleCard(preloadedCategories[newCategory].preloadedFirstArticle);
+        catContainer.appendChild(card);
+        
+        // Mark this article as used
+        const firstArticleTitle = preloadedCategories[newCategory].preloadedFirstArticle.title;
+        categoryMembers = categoryMembers.filter(member => 
+          member.title !== firstArticleTitle
+        );
+      } else {
+        // Otherwise load the first article now
+        await preloadCategoryFeedArticles(catContainer, 1);
+      }
+      
+      // Hide loading indicator and continue loading more articles
+      loadingIndicator.style.display = "none";
+      catContainer.classList.remove("loading");
+      
+      // Preload more articles
+      preloadCategoryFeedArticles(catContainer, CATEGORY_PRELOAD_COUNT - 1);
     }
   
     // --------------------
