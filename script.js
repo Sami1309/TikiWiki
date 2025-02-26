@@ -20,6 +20,20 @@ document.addEventListener("DOMContentLoaded", function () {
       localStorage.setItem("likedArticles", JSON.stringify([]));
     }
   
+    // Global viewing mode for article images:
+    let globalShrunk = false;
+  
+    // Helper function to update all article cards to the current mode:
+    function updateAllCardsViewMode() {
+      document.querySelectorAll(".article-card").forEach((card) => {
+        if (globalShrunk) {
+          card.classList.add("shrunk");
+        } else {
+          card.classList.remove("shrunk");
+        }
+      });
+    }
+  
     // --------------------
     // MAIN FEED FUNCTIONS
     // --------------------
@@ -100,12 +114,17 @@ document.addEventListener("DOMContentLoaded", function () {
       // Attach horizontal swipe detection.
       attachSwipeDetection(card, article);
   
-      // *** NEW: Attach a double-click event handler to toggle background display ***
+      // *** NEW: Attach a double-click event handler for global mode toggle ***
       card.addEventListener("dblclick", function (e) {
-        // Optionally, prevent the event if double-clicked on a child (like a link)
-        // if (e.target.closest("a") || e.target.closest("button")) return;
-        card.classList.toggle("shrunk");
+        e.preventDefault();
+        globalShrunk = !globalShrunk;
+        updateAllCardsViewMode();
       });
+      
+      // Ensure new cards follow the current global viewing mode.
+      if (globalShrunk) {
+        card.classList.add("shrunk");
+      }
   
       return card;
     }

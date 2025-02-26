@@ -66,6 +66,10 @@
     padding-left: 15px; /* Space for the accent bar */
     border-left: 4px solid #4dabf7; /* Accent bar */
     position: relative;
+    -webkit-user-select: none; /* Chrome, Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* Internet Explorer & Edge */
+    user-select: none;         /* Standard syntax */
   }
   
   .article-title a {
@@ -87,8 +91,9 @@
     overflow-y: auto;
     color: rgba(255, 255, 255, 0.9);
     padding-left: 15px; /* Match title's padding exactly */
-    border-left: 4px solid rgba(77, 171, 247, 0.4); /* Match title's border width */
-    margin-left: 0; /* Remove the extra margin */
+    border-left: 4px solid rgba(77, 171, 247, 0.4);
+    margin-left: 0;
+    user-select: none; /* Prevent text selection on double-click */
   }
   
   /* View Liked Articles button improvement */
