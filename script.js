@@ -99,8 +99,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const card = document.createElement("div");
       card.className = "article-card";
   
-      if (article.thumbnail && article.thumbnail.source) {
-        card.style.backgroundImage = `url(${article.thumbnail.source})`;
+      if (article.originalimage && article.originalimage.source) {
+        card.style.backgroundImage = `url(${article.originalimage.source})`;
       } else {
         card.style.backgroundColor = "#333";
       }
@@ -858,7 +858,7 @@ document.addEventListener("DOMContentLoaded", function () {
             continue;
           }
           
-          if (article && article.thumbnail && article.thumbnail.source) {
+          if (article && article.originalimage && article.originalimage.source) {
             const card = createArticleCard(article);
             catContainer.appendChild(card);
             displayedTitles.add(article.title);
@@ -912,7 +912,7 @@ document.addEventListener("DOMContentLoaded", function () {
               `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(member.title)}`
             );
             const article = await response.json();
-            if (article && article.thumbnail && article.thumbnail.source) {
+            if (article && article.originalimage && article.originalimage.source) {
               // Store this article as the preloaded first article
               preloadedCategories[category].preloadedFirstArticle = article;
               break;
@@ -1113,12 +1113,12 @@ document.addEventListener("DOMContentLoaded", function () {
           const articleItem = document.createElement("div");
           articleItem.className = "liked-article-item";
           
-          // Create thumbnail if available
-          if (article.thumbnail && article.thumbnail.source) {
-            const thumbnail = document.createElement("div");
-            thumbnail.className = "liked-article-thumbnail";
-            thumbnail.style.backgroundImage = `url(${article.thumbnail.source})`;
-            articleItem.appendChild(thumbnail);
+          // Create originalimage if available
+          if (article.originalimage && article.originalimage.source) {
+            const originalimage = document.createElement("div");
+            originalimage.className = "liked-article-originalimage";
+            originalimage.style.backgroundImage = `url(${article.originalimage.source})`;
+            articleItem.appendChild(originalimage);
           }
           
           // Create article info
