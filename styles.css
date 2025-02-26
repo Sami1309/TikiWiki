@@ -268,5 +268,15 @@
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
+    background-color: #222; /* Darker grey background */
+    background-image: linear-gradient(to bottom, #1a1a1a, #2c2c2c); /* Subtle gradient */
+  }
+  
+  .article-card.shrunk .article-overlay {
+    z-index: 2; /* Ensure overlay stays on top */
+  }
+  
+  .article-card.shrunk .like-button {
+    z-index: 3; /* Ensure like button stays on top */
   }
   
