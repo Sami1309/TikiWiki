@@ -194,7 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // On mobile, if the text has more than 60 words, truncate it.
       if (window.innerWidth <= 600) {
         const words = textContent.split(/\s+/);
-        if (words.length > 60) {
+        if (words.length > 45) {
           textContent = words.slice(0, 60).join(" ") + " ...";
         }
       }
