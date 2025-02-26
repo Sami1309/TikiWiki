@@ -501,3 +501,28 @@
     z-index: 2000;
   }
   
+  /* New media query for desktop: adjust the overlay to be slightly higher */
+  @media screen and (min-width: 601px) {
+    .article-overlay {
+      top: 65%;  /* Moved up from 70% to 65% on desktop */
+    }
+  }
+  
+  /* Existing mobile override remains */
+  @media screen and (max-width: 600px) {
+    .article-overlay {
+      position: absolute;
+      top: 60%;               /* Anchor the top edge at 40% of the viewport height */
+      left: 5%;
+      right: 5%;
+      max-height: 50vh;       /* Limit the overlay's height to a maximum of half the viewport */
+      overflow-y: auto;       /* Enable scrolling for long content */
+      padding: 15px;
+      border-radius: 6px;
+      background: rgba(50, 50, 50, 0.8);
+    }
+    
+    /* For articles with only a short intro text, position the overlay so it wraps the content */
+
+  }
+  

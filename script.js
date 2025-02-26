@@ -106,30 +106,21 @@ document.addEventListener("DOMContentLoaded", function () {
       const card = document.createElement("div");
       card.className = "article-card";
   
-      // If the article has an image, show a black background with a spinner while loading
       if (article.originalimage && article.originalimage.source) {
-        // Set a plain black background
         card.style.backgroundColor = "#000";
-  
-        // Create the spinner element
         const spinner = document.createElement("div");
         spinner.className = "spinner";
         card.appendChild(spinner);
-  
-        // Create an Image object to preload the image
         const img = new Image();
         img.src = article.originalimage.source;
         img.onload = function () {
-          // Remove the spinner and set the card's background image
           card.style.backgroundImage = `url(${article.originalimage.source})`;
           spinner.remove();
         };
         img.onerror = function () {
-          // If the image fails to load, remove the spinner
           spinner.remove();
         };
       } else {
-        // If there's no image, default to a fallback background color.
         card.style.backgroundColor = "#333";
       }
   
@@ -146,11 +137,8 @@ document.addEventListener("DOMContentLoaded", function () {
         e.stopPropagation();
       });
       title.appendChild(link);
-      
-      // Add title to the overlay
       overlay.appendChild(title);
-      
-      // Create heart icon as a separate element in the overlay
+  
       const heartIcon = document.createElement("div");
       heartIcon.className = "heart-icon";
       
@@ -198,7 +186,22 @@ document.addEventListener("DOMContentLoaded", function () {
       
       const text = document.createElement("p");
       text.className = "article-text";
-      text.textContent = article.extract;
+      
+      let textContent = article.extract.trim();
+      // On mobile, if the text has more than 60 words, truncate it.
+      if (window.innerWidth <= 600) {
+        const words = textContent.split(/\s+/);
+        if (words.length > 60) {
+          textContent = words.slice(0, 60).join(" ") + " ...";
+        }
+      }
+      text.textContent = textContent;
+      
+      // If the intro text is very short, add the 'short-text' class for alternative positioning.
+      if (article.extract.trim().length < 100) {
+        overlay.classList.add("short-text");
+      }
+      
       overlay.appendChild(text);
   
       card.appendChild(overlay);
