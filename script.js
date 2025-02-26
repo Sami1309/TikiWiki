@@ -23,6 +23,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Global viewing mode for article images:
     let globalShrunk = false;
   
+    // Add this to global variables section
+    let categoryPreloadQueue = [];
+    const CATEGORY_AHEAD_PRELOAD = 5; // Number of upcoming articles to preload categories for
+  
     // Helper function to update all article cards to the current mode:
     function updateAllCardsViewMode() {
       document.querySelectorAll(".article-card").forEach((card) => {
@@ -54,14 +58,26 @@ document.addEventListener("DOMContentLoaded", function () {
   
     async function preloadArticles(count) {
       for (let i = 0; i < count; i++) {
-        fetchRandomArticle().then((article) => {
+        try {
+          const article = await fetchRandomArticle();
           if (article) {
             articleQueue.push(article);
+            
+            // Add this article to the category preload queue
+            categoryPreloadQueue.push(article);
+            
+            // If we have enough articles in the queue, preload their categories
+            if (categoryPreloadQueue.length >= CATEGORY_AHEAD_PRELOAD) {
+              preloadCategoriesForQueuedArticles();
+            }
+            
             if (container.childElementCount < 2) {
               addNextArticle();
             }
           }
-        });
+        } catch (error) {
+          console.error("Error preloading article:", error);
+        }
       }
     }
   
@@ -378,7 +394,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
         
-        // Create temporary overlay (similar to openCategoryFeed but without full initialization)
+        // Create temporary overlay
         currentCategoryName = category;
         currentCategoryOverlay = document.createElement("div");
         currentCategoryOverlay.id = "category-overlay";
@@ -395,9 +411,15 @@ document.addEventListener("DOMContentLoaded", function () {
         catContainer.className = "category-container";
         currentCategoryOverlay.appendChild(catContainer);
         
+        // Add a loading indicator
+        const loadingIndicator = document.createElement("div");
+        loadingIndicator.className = "category-loading";
+        loadingIndicator.textContent = "Loading articles...";
+        currentCategoryOverlay.appendChild(loadingIndicator);
+        
         document.body.appendChild(currentCategoryOverlay);
         
-        // Preload at least one article immediately before animation starts
+        // Ensure we have category members
         if (preloadedCategories[category]) {
           categoryMembers = preloadedCategories[category].slice();
         } else {
@@ -405,8 +427,18 @@ document.addEventListener("DOMContentLoaded", function () {
           preloadedCategories[category] = categoryMembers.slice();
         }
         
-        // Immediately load the first article to avoid black screen
-        await preloadCategoryFeedArticles(catContainer, 1);
+        // Use the preloaded first article if available
+        if (preloadedCategories[category].preloadedFirstArticle) {
+          const card = createArticleCard(preloadedCategories[category].preloadedFirstArticle);
+          catContainer.appendChild(card);
+          loadingIndicator.style.display = "none";
+        } else {
+          // Otherwise load the first article now
+          catContainer.classList.add("loading");
+          await preloadCategoryFeedArticles(catContainer, 1);
+          catContainer.classList.remove("loading");
+          loadingIndicator.style.display = "none";
+        }
         
         // Don't add the visible class yet - we're manually controlling position
       }
@@ -629,10 +661,17 @@ document.addEventListener("DOMContentLoaded", function () {
         categoryMembers = await fetchCategoryMembers(currentCategoryName);
         categoryMembers.sort(() => Math.random() - 0.5);
       }
+      
+      // If we already have articles loaded and this is the first load request,
+      // we can skip (the preloaded first article is already there)
+      if (count === 1 && catContainer.childElementCount > 0) {
+        return;
+      }
+      
       let loaded = 0;
       while (loaded < count && categoryMembers.length > 0) {
         const member = categoryMembers.pop();
-        if (member.ns !== 0) continue; // skip non-main articles (including the category page)
+        if (member.ns !== 0) continue; // skip non-main articles
         try {
           const response = await fetch(
             `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(member.title)}`
@@ -645,6 +684,60 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         } catch (error) {
           console.error("Error fetching category article summary:", error);
+        }
+      }
+    }
+  
+    // New function to preload categories for queued articles
+    async function preloadCategoriesForQueuedArticles() {
+      // Process the first few articles in the queue
+      const articlesToProcess = categoryPreloadQueue.slice(0, CATEGORY_AHEAD_PRELOAD);
+      
+      // For each article, preload its category
+      for (const article of articlesToProcess) {
+        const category = await getMainCategory(article);
+        if (category && !preloadedCategories[category]) {
+          // Fetch and store category members
+          const members = await fetchCategoryMembers(category);
+          preloadedCategories[category] = members.slice();
+          
+          // Preload the first article for this category
+          await preloadFirstCategoryArticle(category);
+        }
+      }
+      
+      // Remove processed articles from the queue
+      categoryPreloadQueue = categoryPreloadQueue.slice(CATEGORY_AHEAD_PRELOAD);
+    }
+  
+    // New function to preload just the first article for a category
+    async function preloadFirstCategoryArticle(category) {
+      if (!preloadedCategories[category] || preloadedCategories[category].length === 0) {
+        return;
+      }
+      
+      // Create a temporary container to hold the preloaded article data
+      if (!preloadedCategories[category].preloadedFirstArticle) {
+        preloadedCategories[category].preloadedFirstArticle = null;
+        
+        // Find a suitable article (with an image)
+        for (let i = 0; i < Math.min(5, preloadedCategories[category].length); i++) {
+          const member = preloadedCategories[category][i];
+          if (member.ns !== 0) continue; // Skip non-main articles
+          
+          try {
+            const response = await fetch(
+              `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(member.title)}`
+            );
+            const article = await response.json();
+            if (article && article.thumbnail && article.thumbnail.source) {
+              // Store this article as the preloaded first article
+              preloadedCategories[category].preloadedFirstArticle = article;
+              break;
+            }
+          } catch (error) {
+            console.error("Error preloading category first article:", error);
+          }
         }
       }
     }

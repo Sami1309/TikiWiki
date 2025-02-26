@@ -181,7 +181,18 @@
     z-index: 10;
   }
   
-  /* The vertical scroll container inside the overlay */
+  /* Add a loading indicator for category transitions */
+  .category-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.2em;
+    z-index: 5;
+  }
+  
+  /* Fade transition for category container */
   .category-container {
     position: absolute;
     top: 70px; /* leave space for header */
@@ -193,6 +204,11 @@
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
+    transition: opacity 0.2s ease;
+  }
+  
+  .category-container.loading {
+    opacity: 0.3;
   }
   
   /* ---------------------------
