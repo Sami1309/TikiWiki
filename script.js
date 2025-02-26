@@ -192,6 +192,20 @@ document.addEventListener("DOMContentLoaded", function () {
       if (globalShrunk) {
         card.classList.add("shrunk");
       }
+      
+      // Add double tap support for mobile
+      let lastTap = 0;
+      card.addEventListener("touchstart", function(e) {
+          const currentTime = new Date().getTime();
+          const tapLength = currentTime - lastTap;
+          if (tapLength < 300 && tapLength > 0) {
+              // Double tap occurred
+              e.preventDefault();
+              globalShrunk = !globalShrunk;
+              updateAllCardsViewMode();
+          }
+          lastTap = currentTime;
+      });
   
       return card;
     }
