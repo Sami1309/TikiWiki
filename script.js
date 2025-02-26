@@ -100,6 +100,13 @@ document.addEventListener("DOMContentLoaded", function () {
       // Attach horizontal swipe detection.
       attachSwipeDetection(card, article);
   
+      // *** NEW: Attach a double-click event handler to toggle background display ***
+      card.addEventListener("dblclick", function (e) {
+        // Optionally, prevent the event if double-clicked on a child (like a link)
+        // if (e.target.closest("a") || e.target.closest("button")) return;
+        card.classList.toggle("shrunk");
+      });
+  
       return card;
     }
   

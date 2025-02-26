@@ -243,3 +243,9 @@
     z-index: 20;
   }
   
+  .article-card.shrunk {
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
