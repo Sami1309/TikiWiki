@@ -95,6 +95,13 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   
+    // New helper function to ensure the main feed always has at least PRELOAD_COUNT articles preloaded.
+    function ensureArticlesInQueue() {
+      if (articleQueue.length < PRELOAD_COUNT) {
+        preloadArticles(PRELOAD_COUNT - articleQueue.length);
+      }
+    }
+  
     function createArticleCard(article) {
       const card = document.createElement("div");
       card.className = "article-card";
@@ -239,6 +246,9 @@ document.addEventListener("DOMContentLoaded", function () {
   
         // Remove the initial loader overlay once the first article is added.
         removeInitialLoader();
+  
+        // Ensure that there are always at least PRELOAD_COUNT articles preloaded.
+        ensureArticlesInQueue();
   
         if (container.scrollHeight <= container.clientHeight && articleQueue.length > 0) {
           addNextArticle();
@@ -1017,10 +1027,8 @@ document.addEventListener("DOMContentLoaded", function () {
       // Use a larger threshold (200px) to preload main feed articles earlier.
       if (container.scrollTop + container.clientHeight >= container.scrollHeight - 200) {
         addNextArticle();
-        if (articleQueue.length < PRELOAD_COUNT) {
-          preloadArticles(PRELOAD_COUNT - articleQueue.length);
-        }
       }
+      ensureArticlesInQueue();
     });
   
     document.getElementById("view-liked-btn").addEventListener("click", function () {
