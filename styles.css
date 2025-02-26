@@ -272,10 +272,10 @@
   /* Fade transition for category container */
   .category-container {
     position: absolute;
-    top: 70px; /* leave space for header */
+    top: 0;   /* start at the top */
     left: 0;
     width: 100%;
-    height: calc(100% - 70px);
+    height: 100%; /* occupy the full viewport */
     overflow-y: scroll;
     scroll-snap-type: y mandatory;
     scroll-behavior: smooth;
