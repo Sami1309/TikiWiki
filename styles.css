@@ -44,58 +44,102 @@
   
   /* Overlay at the bottom of each card (for title & text) */
   .article-overlay {
-    position: relative;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 20px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9));
+    padding: 20px 25px; /* Reduced top padding */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    height: 33%; /* Take up bottom third of the card */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Align content to top of overlay */
   }
   
-  /* Title style */
+  /* Title style with colored accent bar */
   .article-title {
-    font-size: 2em;
-    margin-bottom: 10px;
+    font-size: 1.8em;
+    margin-bottom: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding-left: 15px; /* Space for the accent bar */
+    border-left: 4px solid #4dabf7; /* Accent bar */
+    position: relative;
   }
   
   .article-title a {
     color: #fff;
     text-decoration: none;
+    transition: color 0.2s ease;
   }
   
-  /* Introductory text style */
+  .article-title a:hover {
+    color: #4dabf7;
+    text-decoration: underline;
+  }
+  
+  /* Introductory text style with matching accent */
   .article-text {
     font-size: 1em;
-    line-height: 1.4;
+    line-height: 1.5;
+    max-height: calc(100% - 60px); /* Leave space for title */
+    overflow-y: auto;
+    color: rgba(255, 255, 255, 0.9);
+    padding-left: 15px; /* Match title's padding exactly */
+    border-left: 4px solid rgba(77, 171, 247, 0.4); /* Match title's border width */
+    margin-left: 0; /* Remove the extra margin */
   }
   
-  /* Like button (empty heart) in the lower-right of the overlay */
-  .like-button {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    background: transparent;
-    border: none;
-    font-size: 2em;
-    color: #fff;
-    cursor: pointer;
-    z-index: 50;
-    transition: color 0.3s;
-  }
-  
-  .like-button.liked {
-    color: red;
-  }
-  
-  /* Fixed "View Liked Articles" button */
+  /* View Liked Articles button improvement */
   #view-liked-btn {
     position: fixed;
     top: 20px;
     left: 20px;
     z-index: 1000;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.8);
+    padding: 10px 16px;
+    background: rgba(77, 171, 247, 0.8);
+    color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+  }
+  
+  #view-liked-btn:hover {
+    background: rgba(77, 171, 247, 1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Like button styling improvements */
+  .like-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    z-index: 50;
+    transition: all 0.3s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .like-button:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+  }
+  
+  .like-button:disabled {
+    background: rgba(220, 53, 69, 0.7);
+    border-color: rgba(220, 53, 69, 0.3);
   }
   
   /* ---------------------------
