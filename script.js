@@ -1029,11 +1029,17 @@ document.addEventListener("DOMContentLoaded", function () {
           const likedContainer = likedOverlay.querySelector(".liked-container");
           likedContainer.innerHTML = "";
           
-          // Optional: Add a message for empty state
+          // Add a message for empty state
           const emptyMessage = document.createElement("div");
           emptyMessage.className = "empty-likes-message";
           emptyMessage.textContent = "You haven't liked any articles yet.";
           likedContainer.appendChild(emptyMessage);
+          
+          // Reset all heart icons on the page to unliked state
+          document.querySelectorAll(".heart-icon.liked").forEach(heart => {
+            heart.classList.remove("liked");
+            heart.classList.add("unliked");
+          });
         });
         actionContainer.appendChild(clearBtn);
         
