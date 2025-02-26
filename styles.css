@@ -1,0 +1,201 @@
+/* Basic reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Ensure full-page height and disable body scrolling */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* ---------------------------
+     MAIN FEED STYLES
+  --------------------------- */
+  
+  /* Main feed scroll container */
+  #article-container {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+  
+  /* Each article card fills the viewport */
+  .article-card {
+    height: 100vh;
+    position: relative;
+    scroll-snap-align: start;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    color: #fff;
+    will-change: transform;
+    touch-action: pan-y;
+  }
+  
+  /* Overlay at the bottom of each card (for title & text) */
+  .article-overlay {
+    position: relative;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+  }
+  
+  /* Title style */
+  .article-title {
+    font-size: 2em;
+    margin-bottom: 10px;
+  }
+  
+  .article-title a {
+    color: #fff;
+    text-decoration: none;
+  }
+  
+  /* Introductory text style */
+  .article-text {
+    font-size: 1em;
+    line-height: 1.4;
+  }
+  
+  /* Like button (empty heart) in the lower-right of the overlay */
+  .like-button {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    font-size: 2em;
+    color: #fff;
+    cursor: pointer;
+    z-index: 50;
+    transition: color 0.3s;
+  }
+  
+  .like-button.liked {
+    color: red;
+  }
+  
+  /* Fixed "View Liked Articles" button */
+  #view-liked-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  /* ---------------------------
+     CATEGORY OVERLAY STYLES
+  --------------------------- */
+  
+  /* The overlay covers the entire screen and is initially off-screen to the right */
+  .category-overlay {
+    position: fixed;
+    top: 0;
+    left: 100vw; /* off‐screen initially */
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    color: #fff;
+    transition: left 0.3s ease;
+    z-index: 2000;
+    will-change: left;
+    touch-action: pan-y;
+  }
+  .category-overlay.visible {
+    left: 0;
+  }
+  
+  /* Category header is absolutely positioned */
+  .category-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    font-size: 1.5em;
+    z-index: 10;
+  }
+  
+  /* The vertical scroll container inside the overlay */
+  .category-container {
+    position: absolute;
+    top: 70px; /* leave space for header */
+    left: 0;
+    width: 100%;
+    height: calc(100% - 70px);
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+  
+  /* ---------------------------
+     LIKED ARTICLES OVERLAY STYLES
+  --------------------------- */
+  
+  #liked-overlay {
+    position: fixed;
+    top: 0;
+    left: 100vw; /* off-screen initially */
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    transition: left 0.3s ease;
+    z-index: 3000;
+  }
+  
+  #liked-overlay.visible {
+    left: 0;
+  }
+  
+  .liked-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    font-size: 1.5em;
+    z-index: 10;
+  }
+  
+  .liked-container {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 70px);
+    overflow-y: scroll;
+    padding: 10px;
+  }
+  
+  .close-liked-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 2em;
+    cursor: pointer;
+    z-index: 20;
+  }
+  
