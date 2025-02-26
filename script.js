@@ -1196,5 +1196,25 @@ document.addEventListener("DOMContentLoaded", function () {
         loader.remove();
       }
     }
+
+    // Info window event handling
+    const infoBtn = document.getElementById("info-btn");
+    const infoWindow = document.getElementById("info-window");
+    const closeInfoBtn = document.getElementById("close-info-btn");
+
+    infoBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      // Toggle info window visibility
+      if (infoWindow.style.display === "block") {
+        infoWindow.style.display = "none";
+      } else {
+        infoWindow.style.display = "block";
+      }
+    });
+
+    closeInfoBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      infoWindow.style.display = "none";
+    });
   });
   
