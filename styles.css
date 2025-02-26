@@ -342,12 +342,6 @@
     opacity: 0.7; /* Slightly more transparent */
   }
   
-  /* Disabled state for View Liked button */
-  #view-liked-btn.disabled {
-    background: rgba(150, 150, 150, 0.5);
-    cursor: not-allowed;
-  }
-  
   /* Action buttons in the liked articles overlay */
   .liked-actions {
     display: flex;
@@ -382,5 +376,13 @@
   
   .export-btn:hover {
     background-color: rgba(77, 171, 247, 1);
+  }
+  
+  /* Add style for empty likes message */
+  .empty-likes-message {
+    text-align: center;
+    padding: 30px;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
   }
   
