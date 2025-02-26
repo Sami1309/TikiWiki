@@ -397,6 +397,17 @@ document.addEventListener("DOMContentLoaded", function () {
         
         document.body.appendChild(currentCategoryOverlay);
         
+        // Preload at least one article immediately before animation starts
+        if (preloadedCategories[category]) {
+          categoryMembers = preloadedCategories[category].slice();
+        } else {
+          categoryMembers = await fetchCategoryMembers(category);
+          preloadedCategories[category] = categoryMembers.slice();
+        }
+        
+        // Immediately load the first article to avoid black screen
+        await preloadCategoryFeedArticles(catContainer, 1);
+        
         // Don't add the visible class yet - we're manually controlling position
       }
       
