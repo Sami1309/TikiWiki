@@ -512,7 +512,7 @@
   @media screen and (max-width: 600px) {
     .article-overlay {
       position: absolute;
-      top: 50%;               /* Anchor the top edge at 40% of the viewport height */
+      top: 45%;               /* Anchor the top edge at 40% of the viewport height */
       left: 5%;
       right: 5%;
       max-height: 50vh;       /* Limit the overlay's height to a maximum of half the viewport */
