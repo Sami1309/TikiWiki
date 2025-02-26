@@ -245,7 +245,7 @@
   .liked-container {
     padding: 20px;
     overflow-y: auto;
-    height: calc(100% - 80px);
+    height: calc(100% - 130px); /* Adjusted to make room for action buttons */
   }
   
   .liked-article-item {
@@ -311,21 +311,21 @@
   /* Heart icon for liking articles */
   .heart-icon {
     position: absolute;
-    top: 20px; /* Position at the same level as the title */
-    right: 20px; /* Position on the right side */
-    font-size: 28px; /* Consistent font size for both states */
+    top: 20px;
+    right: 20px;
+    font-size: 32px; /* Increased from 28px */
     cursor: pointer;
     color: white;
     transition: all 0.2s ease;
-    z-index: 100; /* Ensure it's above other elements */
+    z-index: 100;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     user-select: none;
-    width: 40px; /* Fixed width to ensure consistent sizing */
-    height: 40px; /* Fixed height to ensure consistent sizing */
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    line-height: 1; /* Ensure consistent line height */
+    line-height: 1;
   }
   
   .heart-icon:hover {
@@ -346,5 +346,41 @@
   #view-liked-btn.disabled {
     background: rgba(150, 150, 150, 0.5);
     cursor: not-allowed;
+  }
+  
+  /* Action buttons in the liked articles overlay */
+  .liked-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .liked-action-btn {
+    padding: 8px 15px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+  }
+  
+  .clear-btn {
+    background-color: rgba(220, 53, 69, 0.8);
+    color: white;
+  }
+  
+  .clear-btn:hover {
+    background-color: rgba(220, 53, 69, 1);
+  }
+  
+  .export-btn {
+    background-color: rgba(77, 171, 247, 0.8);
+    color: white;
+  }
+  
+  .export-btn:hover {
+    background-color: rgba(77, 171, 247, 1);
   }
   

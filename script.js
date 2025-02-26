@@ -1015,6 +1015,50 @@ document.addEventListener("DOMContentLoaded", function () {
           });
           likedOverlay.appendChild(closeBtn);
           
+          // Create action buttons container
+          const actionContainer = document.createElement("div");
+          actionContainer.className = "liked-actions";
+          
+          // Add Clear Likes button
+          const clearBtn = document.createElement("button");
+          clearBtn.className = "liked-action-btn clear-btn";
+          clearBtn.textContent = "Clear All Likes";
+          clearBtn.addEventListener("click", function() {
+            if (confirm("Are you sure you want to clear all liked articles? This cannot be undone.")) {
+              localStorage.setItem("likedArticles", JSON.stringify([]));
+              updateLikedButtonState();
+              document.body.removeChild(likedOverlay);
+            }
+          });
+          actionContainer.appendChild(clearBtn);
+          
+          // Add Export Likes button
+          const exportBtn = document.createElement("button");
+          exportBtn.className = "liked-action-btn export-btn";
+          exportBtn.textContent = "Export as Markdown";
+          exportBtn.addEventListener("click", function() {
+            const liked = JSON.parse(localStorage.getItem("likedArticles")) || [];
+            let markdown = "# My Liked Wikipedia Articles\n\n";
+            
+            liked.forEach(article => {
+              markdown += `- [${article.title}](${article.content_urls.desktop.page})\n`;
+            });
+            
+            // Create downloadable file
+            const blob = new Blob([markdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'liked-wikipedia-articles.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          });
+          actionContainer.appendChild(exportBtn);
+          
+          likedOverlay.appendChild(actionContainer);
+          
           const likedContainer = document.createElement("div");
           likedContainer.className = "liked-container";
           likedOverlay.appendChild(likedContainer);
