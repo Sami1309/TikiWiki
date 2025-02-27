@@ -48,6 +48,18 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   
+    // Add this to global variables section
+    let userSelectStyles = document.createElement('style');
+    document.head.appendChild(userSelectStyles);
+    userSelectStyles.sheet.insertRule(`
+      #view-liked-btn, .category-header, #app-title {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+    `, 0);
+  
     // Helper function to update all article cards to the current mode:
     function updateAllCardsViewMode() {
       document.querySelectorAll(".article-card").forEach((card) => {
