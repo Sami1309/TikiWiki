@@ -7,13 +7,22 @@ Inspired by https://github.com/IsaacGemal/wikitok
 ## Features
 
 - **Infinite Scroll Up**: Pull (or scroll) up to fetch a brand-new, random Wikipedia article.
-- **Category Scroll**: Swipe left (mobile) or click the right arrow (desktop) to open related articles from the same category.
+- **Category Scroll**: Swipe left (mobile) or click the right arrow (desktop) to scroll related articles
 - **Saved Likes**: Likes are saved and exportable, and persist between windows
 
 ## Goals
 
 - Make an functional, useful, painless app with no frameworks or external libraries
 - Develop into a procedural, algorithmically curated learning tool as a proof-of-concept
+
+## Pending Improvements
+
+- Improve article preloading to reduce loading delay when scrolling fast
+- Improve scrolling tactility on mobile
+- Improve styling for mobile and desktop
+- Add recommendation system based on scroll behaviors to load relevant articles
+- Prioritize loading more interesting/photogenic articles
+- Improve loading times
 
 ---
 
