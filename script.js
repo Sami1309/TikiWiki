@@ -428,7 +428,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Create a header for the category title.
       const header = document.createElement("div");
       header.className = "category-header";
-      header.textContent = `Category: ${category}`;
+      header.textContent = `${category}`;
       currentCategoryOverlay.appendChild(header);
   
       // Create a vertical scroll container for category articles.
@@ -608,7 +608,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         const header = document.createElement("div");
         header.className = "category-header";
-        header.textContent = `Category: ${category}`;
+        header.textContent = `${category}`;
         currentCategoryOverlay.appendChild(header);
         
         const catContainer = document.createElement("div");
@@ -630,16 +630,106 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
           categoryMembers = await fetchCategoryMembers(category);
           preloadedCategories[category] = categoryMembers.slice();
+          
+          // Preload the first article if not already done
+          await preloadFirstCategoryArticle(category);
         }
         
         // Use the preloaded first article if available
         if (preloadedCategories[category].preloadedFirstArticle) {
-          const card = createArticleCard(preloadedCategories[category].preloadedFirstArticle);
+          const preloadedArticle = preloadedCategories[category].preloadedFirstArticle;
+          const card = document.createElement("div");
+          card.className = "article-card";
+          
+          // Use the preloaded image directly
+          if (preloadedArticle.originalimage && preloadedArticle.originalimage.source) {
+            card.style.backgroundColor = "#000";
+            card.style.backgroundImage = `url(${preloadedArticle.originalimage.source})`;
+          } else {
+            card.style.backgroundColor = "#333";
+          }
+          
+          const overlay = document.createElement("div");
+          overlay.className = "article-overlay";
+          
+          const titleContainer = document.createElement('div');
+          titleContainer.className = 'title-container';
+          
+          const title = document.createElement("h2");
+          title.className = "article-title";
+          const link = document.createElement("a");
+          link.href = preloadedArticle.content_urls.desktop.page;
+          link.target = "_blank";
+          link.textContent = preloadedArticle.title;
+          link.addEventListener("pointerdown", function (e) {
+            e.stopPropagation();
+          });
+          title.appendChild(link);
+          
+          const heartIcon = document.createElement("div");
+          heartIcon.className = "heart-icon";
+          
+          // Check if this article is already liked
+          const likedArticles = JSON.parse(localStorage.getItem("likedArticles")) || [];
+          const isLiked = likedArticles.some(a => a.title === preloadedArticle.title);
+          
+          heartIcon.innerHTML = "♥"; // Always use filled heart
+          
+          if (isLiked) {
+            heartIcon.classList.add("liked");
+          } else {
+            heartIcon.classList.add("unliked");
+          }
+          
+          titleContainer.appendChild(title);
+          titleContainer.appendChild(heartIcon);
+          
+          // Event listeners for heart icon
+          heartIcon.addEventListener("pointerdown", function(e) {
+            e.stopPropagation();
+          });
+          
+          heartIcon.addEventListener("click", function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            if (heartIcon.classList.contains("liked")) {
+              unlikeArticle(preloadedArticle);
+              heartIcon.classList.remove("liked");
+              heartIcon.classList.add("unliked");
+            } else {
+              likeArticle(preloadedArticle);
+              heartIcon.classList.add("liked");
+              heartIcon.classList.remove("unliked");
+            }
+            
+            updateLikedButtonState();
+          });
+          
+          const text = document.createElement("p");
+          text.className = "article-text";
+          
+          let textContent = preloadedArticle.extract.trim();
+          if (window.innerWidth <= 600) {
+            const words = textContent.split(/\s+/);
+            if (words.length > 45) {
+              textContent = words.slice(0, 45).join(" ") + " ...";
+            }
+          }
+          text.textContent = textContent;
+          
+          if (preloadedArticle.extract.trim().length < 100) {
+            overlay.classList.add("short-text");
+          }
+          
+          overlay.appendChild(titleContainer);
+          overlay.appendChild(text);
+          
+          card.appendChild(overlay);
           catContainer.appendChild(card);
           
-          // Mark this article as used by removing it from the category members
-          // or filtering it out when we load more
-          const firstArticleTitle = preloadedCategories[category].preloadedFirstArticle.title;
+          // Mark this article as used
+          const firstArticleTitle = preloadedArticle.title;
           categoryMembers = categoryMembers.filter(member => 
             member.title !== firstArticleTitle
           );
@@ -652,8 +742,6 @@ document.addEventListener("DOMContentLoaded", function () {
           catContainer.classList.remove("loading");
           loadingIndicator.style.display = "none";
         }
-        
-        // Don't add the visible class yet - we're manually controlling position
       }
       
       function animateToPosition(from, to, callback) {
@@ -999,6 +1087,18 @@ document.addEventListener("DOMContentLoaded", function () {
             if (article && article.originalimage && article.originalimage.source) {
               // Store this article as the preloaded first article
               preloadedCategories[category].preloadedFirstArticle = article;
+              
+              // Actually preload the image
+              const img = new Image();
+              img.src = article.originalimage.source;
+              preloadedCategories[category].preloadedImage = img;
+              
+              // Wait for the image to load
+              await new Promise((resolve) => {
+                img.onload = resolve;
+                img.onerror = resolve; // Continue even if there's an error
+              });
+              
               break;
             }
           } catch (error) {
@@ -1030,7 +1130,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Update the header text
       const header = currentCategoryOverlay.querySelector('.category-header');
       if (header) {
-        header.textContent = `Category: ${newCategory}`;
+        header.textContent = `${newCategory}`;
       }
       
       // Get the category container
