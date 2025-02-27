@@ -1,26 +1,19 @@
 # WikiScroll
 
-A lightweight pure javascript application that lets you discover random Wikipedia articles, inspired by the TikTok procedural scrolling interface.
+A lightweight pure javascript application that lets you discover random Wikipedia articles, inspired by TikTok's procedural scrolling interface.
 
 Inspired by https://github.com/IsaacGemal/wikitok
 
 ## Features
 
-### 1. Random Article Discovery
 - **Infinite Scroll Up**: Pull (or scroll) up to fetch a brand-new, random Wikipedia article.
+- **Category Scroll**: Swipe left (mobile) or click the right arrow (desktop) to open related articles from the same category.
+- **Saved Likes**: Likes are saved and exportable, and persist between windows
 
-### 2. Category-Based Browsing
-- **Swipe Left** (mobile) or **Right Arrow Click** (desktop) to open related articles from the same category.
+## Goals
 
-## Roadmap
-
-### Local Recommendations
-- The local recommendation system will analyze your reading history and content preferences (if you allow).  
-- All data stays on your device for privacy.
-
-### Account-Based Recommendations
-- A potential cloud-based recommendation feature will be introduced for users who choose to create an account.
-- Allows cross-device synchronization and more personalized suggestions.
+- Make an functional, useful, painless app with no frameworks or external libraries
+- Develop into a procedural, algorithmically curated learning tool as a proof-of-concept
 
 ---
 
