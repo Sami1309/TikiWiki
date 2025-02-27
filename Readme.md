@@ -1,6 +1,6 @@
-# Wikipedia Scroller
+# WikiScroll
 
-A lightweight pure javascript application that lets you discover random Wikipedia articles, inspired by the tiktok procedural scroll interface.
+A lightweight pure javascript application that lets you discover random Wikipedia articles, inspired by the TikTok procedural scrolling interface.
 
 Inspired by https://github.com/IsaacGemal/wikitok
 
