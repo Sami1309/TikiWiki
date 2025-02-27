@@ -68,7 +68,7 @@
   
   /* Title style - increased size while maintaining width restriction */
   .article-title {
-    font-size: 1.6em;
+    font-size: 1.8em;
     font-weight: 600;
     letter-spacing: 0.5px;
     padding-left: 15px;
@@ -426,7 +426,7 @@
   }
   
   .heart-icon.unliked {
-    color: rgba(255, 255, 255, 0.5); /* Semi-transparent white for unliked */
+    color: rgba(255, 255, 255, 0); /* Semi-transparent white for unliked */
     opacity: 0.7;
     -webkit-text-stroke: 2.5px white; /* Increased from 1.5px to 2.5px */
     text-stroke: 2.5px white;
@@ -537,7 +537,7 @@
     }
     
     .article-title {
-      font-size: 1.4em;
+      font-size: 1.8em;
       width: 80%;
     }
     
