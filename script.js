@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (window.innerWidth <= 600) {
         const words = textContent.split(/\s+/);
         if (words.length > 45) {
-          textContent = words.slice(0, 60).join(" ") + " ...";
+          textContent = words.slice(0, 45).join(" ") + " ...";
         }
       }
       text.textContent = textContent;
