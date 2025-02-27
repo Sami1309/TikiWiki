@@ -2,7 +2,7 @@
 
 A lightweight pure javascript application that lets you discover random Wikipedia articles, inspired by TikTok's procedural scrolling interface.
 
-Inspired by https://github.com/IsaacGemal/wikitok
+Inspired by https://x.com/tylerangert/status/1886560290864533983 and https://github.com/IsaacGemal/wikitok
 
 ## Features
 
