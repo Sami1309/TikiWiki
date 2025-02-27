@@ -40,30 +40,40 @@
     color: #fff;
     will-change: transform;
     touch-action: pan-y;
+    width: 100%; /* Ensure it stretches full width */
   }
   
   /* Overlay at the bottom of each card (for title & text) */
   .article-overlay {
     position: absolute;
     top: 70%;
-    left: 5%;
-    right: 5%;
+    left: 0;
+    right: 0;
     background: rgba(50, 50, 50, 0.8);
     padding: 20px;
-    border-radius: 8px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    border-radius: 0;
   }
   
-  /* Title style - removed the blue accent bar */
-  .article-title {
-    font-size: 1.8em;
+  /* Title container to hold both title and heart icon */
+  .title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
     margin-bottom: 15px;
+  }
+  
+  /* Title style - increased size while maintaining width restriction */
+  .article-title {
+    font-size: 1.6em;
     font-weight: 600;
     letter-spacing: 0.5px;
     padding-left: 15px;
     user-select: none;
+    width: 80%; /* Restrict to left 80% of the card */
   }
   
   .article-title a {
@@ -178,7 +188,7 @@
   #view-liked-btn {
     position: fixed;
     top: 20px;
-    right: 20px; /* Moved from left to right */
+    right: 20px;
     z-index: 1000;
     padding: 10px;
     background: none;
@@ -385,16 +395,12 @@
     z-index: 3; /* Ensure like button stays on top */
   }
   
-  /* Heart icon for liking articles */
+  /* Heart icon for liking articles - now positioned within the title container */
   .heart-icon {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 32px; /* Increased from 28px */
+    font-size: 32px;
     cursor: pointer;
     color: white;
     transition: all 0.2s ease;
-    z-index: 100;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     user-select: none;
     width: 40px;
@@ -403,6 +409,9 @@
     align-items: center;
     justify-content: center;
     line-height: 1;
+    -webkit-text-stroke: 2.5px white;
+    text-stroke: 2.5px white;
+    margin-right: 15px;
   }
   
   .heart-icon:hover {
@@ -411,12 +420,16 @@
   
   .heart-icon.liked {
     color: #ff3b30; /* Red color when liked */
-    font-size: 28px; /* Same size as the empty heart */
+    font-size: 28px;
+    -webkit-text-stroke: 2.5px white; /* Increased from 1.5px to 2.5px */
+    text-stroke: 2.5px white;
   }
-
+  
   .heart-icon.unliked {
     color: rgba(255, 255, 255, 0.5); /* Semi-transparent white for unliked */
-    opacity: 0.7; /* Slightly more transparent */
+    opacity: 0.7;
+    -webkit-text-stroke: 2.5px white; /* Increased from 1.5px to 2.5px */
+    text-stroke: 2.5px white;
   }
   
   /* Action buttons in the liked articles overlay */
@@ -501,28 +514,70 @@
     z-index: 2000;
   }
   
-  /* New media query for desktop: adjust the overlay to be slightly higher */
+  /* Update media query for desktop */
   @media screen and (min-width: 601px) {
     .article-overlay {
-      top: 65%;  /* Moved up from 70% to 65% on desktop */
+      top: 65%;
+      border-radius: 0; /* Ensure no border radius on desktop */
     }
   }
   
-  /* Existing mobile override remains */
+  /* Update mobile styles */
   @media screen and (max-width: 600px) {
     .article-overlay {
       position: absolute;
-      top: 45%;               /* Anchor the top edge at 40% of the viewport height */
-      left: 5%;
-      right: 5%;
-      max-height: 50vh;       /* Limit the overlay's height to a maximum of half the viewport */
-      overflow-y: auto;       /* Enable scrolling for long content */
+      top: auto;
+      left: 0;
+      right: 0;
+      bottom: 10%;
+      max-height: 70vh;
       padding: 15px;
-      border-radius: 6px;
+      border-radius: 0;
       background: rgba(50, 50, 50, 0.8);
     }
     
-    /* For articles with only a short intro text, position the overlay so it wraps the content */
-
+    .article-title {
+      font-size: 1.4em;
+      width: 80%;
+    }
+    
+    /* No need for special heart positioning in mobile now */
+  }
+  
+  /* App title styling */
+  #app-title {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  
+  #app-title:hover {
+    color: #4dabf7;
+    transform: scale(1.05);
+  }
+  
+  /* Adjust the position of the likes button to avoid overlap with title */
+  #view-liked-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    padding: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
   }
   

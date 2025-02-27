@@ -40,6 +40,14 @@ document.addEventListener("DOMContentLoaded", function () {
     // New global flag to prevent immediate re-opening
     let recentlyClosedCategory = false;
   
+    // Add event listener for app title to refresh the page
+    const appTitle = document.getElementById("app-title");
+    if (appTitle) {
+      appTitle.addEventListener("click", function() {
+        window.location.reload();
+      });
+    }
+  
     // Helper function to update all article cards to the current mode:
     function updateAllCardsViewMode() {
       document.querySelectorAll(".article-card").forEach((card) => {
@@ -129,6 +137,9 @@ document.addEventListener("DOMContentLoaded", function () {
   
       const overlay = document.createElement("div");
       overlay.className = "article-overlay";
+
+      const titleContainer = document.createElement('div');
+      titleContainer.className = 'title-container';
   
       const title = document.createElement("h2");
       title.className = "article-title";
@@ -157,6 +168,9 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         heartIcon.classList.add("unliked"); // Add a class for the unliked state
       }
+
+      titleContainer.appendChild(title);
+      titleContainer.appendChild(heartIcon);
       
       // Event listeners
       heartIcon.addEventListener("pointerdown", function(e) {
@@ -185,7 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
         updateLikedButtonState(); // Update button state
       });
       
-      overlay.appendChild(heartIcon);
+      // overlay.appendChild(heartIcon);
       
       const text = document.createElement("p");
       text.className = "article-text";
@@ -205,6 +219,7 @@ document.addEventListener("DOMContentLoaded", function () {
         overlay.classList.add("short-text");
       }
       
+      overlay.appendChild(titleContainer);
       overlay.appendChild(text);
   
       card.appendChild(overlay);
