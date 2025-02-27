@@ -482,6 +482,7 @@ document.addEventListener("DOMContentLoaded", function () {
       let initialTransform = 0;
       let animationId = null;
       let touchCount = 0;
+      let swipeStartCategory = null; // Add this to track the category when swipe starts
       
       function stopAnimation() {
         if (animationId) {
@@ -513,6 +514,14 @@ document.addEventListener("DOMContentLoaded", function () {
           initialTransform = 0; // Category overlay starts at left: 0
         } else {
           initialTransform = 0; // Main feed has no transform initially
+          
+          // Store the category at the start of the swipe
+          if (element.dataset.category) {
+            swipeStartCategory = element.dataset.category;
+          } else if (article) {
+            // We'll get the category later when needed
+            swipeStartCategory = null;
+          }
         }
         
         currentX = initialTransform;
@@ -572,14 +581,21 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       
       async function createTemporaryCategoryOverlay(article) {
-  
-        let category = element.dataset.category;
+        // Use the category from when the swipe started if available
+        let category = swipeStartCategory;
+        
+        // If we don't have a category yet, get it from the element or fetch it
         if (!category) {
-          category = await getMainCategory(article);
-          if (category) {
-            element.dataset.category = category;
-          } else {
-            return; // No category found
+          category = element.dataset.category;
+          if (!category) {
+            category = await getMainCategory(article);
+            if (category) {
+              element.dataset.category = category;
+              // Save this as our swipe start category to maintain consistency
+              swipeStartCategory = category;
+            } else {
+              return; // No category found
+            }
           }
         }
         
@@ -699,7 +715,8 @@ document.addEventListener("DOMContentLoaded", function () {
               currentCategoryOverlay.classList.add("visible");
               
               // Now fully initialize the category feed
-              const category = element.dataset.category;
+              // Use the category from when the swipe started
+              const category = swipeStartCategory || element.dataset.category;
               if (category) {
                 // Preload category content
                 if (preloadedCategories[category]) {
@@ -776,40 +793,49 @@ document.addEventListener("DOMContentLoaded", function () {
               startY = e.clientY;
               locked = true;
               currentX = 0;
+              
+              // Store the category at the start of the wheel gesture
+              if (element.dataset.category) {
+                swipeStartCategory = element.dataset.category;
+              }
             }
             
             currentX += Math.min(e.deltaX / 10, 5); // Scale the movement
             
             if (currentX >= window.innerWidth * 0.2) {
               // Check that we don't re-open immediately after closing the overlay
-              if (!currentCategoryOverlay && element.dataset.category && !recentlyClosedCategory) {
-                createTemporaryCategoryOverlay({ title: element.dataset.category });
-                animateToPosition(currentX, 100, async function() {
-                  if (currentCategoryOverlay) {
-                    currentCategoryOverlay.style.transition = "";
-                    currentCategoryOverlay.classList.add("visible");
-                    
-                    const category = element.dataset.category;
-                    if (category) {
-                      if (preloadedCategories[category]) {
-                        categoryMembers = preloadedCategories[category].slice();
-                      } else {
-                        categoryMembers = await fetchCategoryMembers(category);
-                        preloadedCategories[category] = categoryMembers.slice();
-                      }
+              if (!currentCategoryOverlay && !recentlyClosedCategory) {
+                // Use the stored swipe start category
+                const categoryToUse = swipeStartCategory || element.dataset.category;
+                if (categoryToUse) {
+                  createTemporaryCategoryOverlay({ title: categoryToUse });
+                  animateToPosition(currentX, 100, async function() {
+                    if (currentCategoryOverlay) {
+                      currentCategoryOverlay.style.transition = "";
+                      currentCategoryOverlay.classList.add("visible");
                       
-                      const catContainer = document.getElementById("category-container");
-                      attachSmoothSwipeDetection(currentCategoryOverlay, "category");
-                      await preloadCategoryFeedArticles(catContainer, CATEGORY_PRELOAD_COUNT);
-                      
-                      catContainer.addEventListener("scroll", function () {
-                        if (catContainer.scrollTop + catContainer.clientHeight >= catContainer.scrollHeight - 50) {
-                          preloadCategoryFeedArticles(catContainer, 5);
+                      const category = element.dataset.category;
+                      if (category) {
+                        if (preloadedCategories[category]) {
+                          categoryMembers = preloadedCategories[category].slice();
+                        } else {
+                          categoryMembers = await fetchCategoryMembers(category);
+                          preloadedCategories[category] = categoryMembers.slice();
                         }
-                      });
+                        
+                        const catContainer = document.getElementById("category-container");
+                        attachSmoothSwipeDetection(currentCategoryOverlay, "category");
+                        await preloadCategoryFeedArticles(catContainer, CATEGORY_PRELOAD_COUNT);
+                        
+                        catContainer.addEventListener("scroll", function () {
+                          if (catContainer.scrollTop + catContainer.clientHeight >= catContainer.scrollHeight - 50) {
+                            preloadCategoryFeedArticles(catContainer, 5);
+                          }
+                        });
+                      }
                     }
-                  }
-                });
+                  });
+                }
               }
             }
           } else if (type === "category" && e.deltaX < 0) {
@@ -984,7 +1010,17 @@ document.addEventListener("DOMContentLoaded", function () {
   
     // New function to update the category overlay when the main article changes
     async function updateCategoryOverlay(newCategory) {
-      if (!currentCategoryOverlay || newCategory === currentCategoryName) return;
+      // Don't update if we're in the middle of opening a category via swipe
+      // or if there's no change in category
+      if (!currentCategoryOverlay || newCategory === currentCategoryName || 
+          document.getElementById("category-overlay").classList.contains("animating")) {
+        return;
+      }
+      
+      // Only update if we're not actively scrolling
+      if (isCategoryScrolling) {
+        return;
+      }
       
       console.log(`Updating category overlay from ${currentCategoryName} to ${newCategory}`);
       
