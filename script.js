@@ -60,6 +60,16 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     `, 0);
   
+    // Add this to global variables section
+    let isMobileDevice = window.innerWidth <= 768;
+    let navArrows = {
+      right: null,
+      left: null
+    };
+  
+    // Create navigation arrows for desktop - CALL IT HERE
+    createNavigationArrows();
+  
     // Helper function to update all article cards to the current mode:
     function updateAllCardsViewMode() {
       document.querySelectorAll(".article-card").forEach((card) => {
@@ -599,6 +609,12 @@ document.addEventListener("DOMContentLoaded", function () {
           preloadCategoryFeedArticles(catContainer, 5);
         }
       });
+  
+      // Update arrow visibility for desktop
+      if (!isMobileDevice && navArrows.right && navArrows.left) {
+        navArrows.right.style.display = 'none';
+        navArrows.left.style.display = 'flex';
+      }
     }
   
     function closeCategoryFeed() {
@@ -612,10 +628,16 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(() => {
           recentlyClosedCategory = false;
         }, 500); // 500ms timeout (adjust as needed)
+        
+        // Update arrow visibility for desktop
+        if (!isMobileDevice && navArrows.right && navArrows.left) {
+          navArrows.right.style.display = 'flex';
+          navArrows.left.style.display = 'none';
+        }
       }
     }
   
-    // Replace the attachSmoothSwipeDetection function with this updated version
+    // Modify the attachSmoothSwipeDetection function to only enable swipe on mobile
     function attachSmoothSwipeDetection(element, type, article = null) {
       let startX = 0;
       let startY = 0;
@@ -625,6 +647,16 @@ document.addEventListener("DOMContentLoaded", function () {
       let animationId = null;
       let touchCount = 0;
       let swipeStartCategory = null; // Add this to track the category when swipe starts
+      
+      // Skip attaching swipe detection on desktop for main feed
+      if (type === "main" && !isMobileDevice) {
+        return; // Don't attach any swipe handlers on desktop for main feed
+      }
+      
+      // Skip attaching swipe detection on desktop for category view
+      if (type === "category" && !isMobileDevice) {
+        return; // Don't attach any swipe handlers on desktop for category view
+      }
       
       function stopAnimation() {
         if (animationId) {
@@ -1010,8 +1042,11 @@ document.addEventListener("DOMContentLoaded", function () {
       element.addEventListener("touchmove", drag);
       element.addEventListener("touchend", move);
       
-      // Add wheel event for trackpad gestures
+      // Modify wheel event to only work on mobile
       element.addEventListener("wheel", function(e) {
+        // Skip on desktop
+        if (!isMobileDevice) return;
+        
         // Only handle horizontal scrolling with trackpad
         if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 5) {
           e.preventDefault();
@@ -1556,5 +1591,68 @@ document.addEventListener("DOMContentLoaded", function () {
       // Observe all cards
       cards.forEach(card => observer.observe(card));
     }
+
+    // Create navigation arrows for desktop
+    function createNavigationArrows() {
+      console.log("creating navigation arrows")
+      // Create right arrow for main feed
+      navArrows.right = document.createElement('div');
+      navArrows.right.className = 'nav-arrow nav-arrow-right';
+      navArrows.right.innerHTML = '&rsaquo;';
+      navArrows.right.title = 'View category';
+      navArrows.right.style.zIndex = '2500'; // Higher than category overlay
+      document.body.appendChild(navArrows.right);
+      
+      // Create left arrow for category view
+      navArrows.left = document.createElement('div');
+      navArrows.left.className = 'nav-arrow nav-arrow-left';
+      navArrows.left.innerHTML = '&lsaquo;';
+      navArrows.left.title = 'Return to main feed';
+      navArrows.left.style.display = 'none'; // Hidden initially
+      navArrows.left.style.zIndex = '2500'; // Higher than category overlay
+      document.body.appendChild(navArrows.left);
+      
+      // Add event listeners
+      navArrows.right.addEventListener('click', async function() {
+        if (currentMainArticle) {
+          const category = await getMainCategory(currentMainArticle);
+          if (category) {
+            openCategoryFeed(category);
+          }
+        }
+      });
+      
+      navArrows.left.addEventListener('click', function() {
+        closeCategoryFeed();
+      });
+      
+      // Initial visibility based on device type
+      updateArrowVisibility();
+    }
+
+    // Function to update arrow visibility based on device type
+    function updateArrowVisibility() {
+      if (navArrows.right && navArrows.left) {
+        if (isMobileDevice) {
+          navArrows.right.style.display = 'none';
+          navArrows.left.style.display = 'none';
+        } else {
+          // On desktop, show appropriate arrow based on current view
+          if (currentCategoryOverlay) {
+            navArrows.right.style.display = 'none';
+            navArrows.left.style.display = 'flex';
+          } else {
+            navArrows.right.style.display = 'flex';
+            navArrows.left.style.display = 'none';
+          }
+        }
+      }
+    }
+
+    // Call createNavigationArrows in the initialization section
+    createNavigationArrows();
+
+    // Make sure to call createNavigationArrows after DOM is loaded
+    setTimeout(createNavigationArrows, 500); // Add a small delay to ensure DOM is ready
   });
   
