@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // --------------------
     const container = document.getElementById("article-container");
     let articleQueue = [];
-    const PRELOAD_COUNT = 10; // for main feed
+    const PRELOAD_COUNT = 20; // Increased from 10 to 20 for smoother scrolling
   
     // For category feed overlay:
     let currentCategoryOverlay = null;
@@ -78,38 +78,95 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   
     async function preloadArticles(count) {
+      // Start a counter for loaded articles
+      let loadedCount = 0;
+      
+      // Show first article immediately if we already have one in the queue
+      if (articleQueue.length > 0 && container.childElementCount === 0) {
+        addNextArticle();
+        loadedCount++;
+      }
+      
+      const preloadPromises = [];
+      
       for (let i = 0; i < count; i++) {
-        try {
-          const article = await fetchRandomArticle();
-          if (article) {
-            articleQueue.push(article);
-            
-            // Preload the category for this article immediately
-            // instead of waiting for the card to be created
-            preloadCategoryForArticle(article);
-            
-            // Add this article to the category preload queue
-            categoryPreloadQueue.push(article);
-            
-            // If we have enough articles in the queue, preload their categories
-            if (categoryPreloadQueue.length >= CATEGORY_AHEAD_PRELOAD) {
-              preloadCategoriesForQueuedArticles();
+        const preloadPromise = (async () => {
+          try {
+            const article = await fetchRandomArticle();
+            if (article) {
+              articleQueue.push(article);
+              
+              // Preload the category for this article immediately
+              preloadCategoryForArticle(article);
+              
+              // Add this article to the category preload queue
+              categoryPreloadQueue.push(article);
+              
+              // If we have enough articles in the queue, preload their categories
+              if (categoryPreloadQueue.length >= CATEGORY_AHEAD_PRELOAD) {
+                preloadCategoriesForQueuedArticles();
+              }
+              
+              loadedCount++;
+              
+              // Show the first article as soon as it's loaded if none are showing yet
+              if (loadedCount === 1 && container.childElementCount === 0) {
+                addNextArticle();
+              }
+              
+              // If container is still not filled with content, add more articles
+              if (container.scrollHeight <= container.clientHeight && articleQueue.length > 0) {
+                addNextArticle();
+              }
             }
-            
-            if (container.childElementCount < 2) {
-              addNextArticle();
-            }
+          } catch (error) {
+            console.error("Error preloading article:", error);
           }
-        } catch (error) {
-          console.error("Error preloading article:", error);
-        }
+        })();
+        
+        preloadPromises.push(preloadPromise);
+      }
+      
+      // Wait for at least one article to load before removing the loader
+      if (preloadPromises.length > 0) {
+        Promise.all(preloadPromises).then(() => {
+          // If we've loaded at least one article, remove the initial loader
+          if (loadedCount > 0) {
+            removeInitialLoader();
+          }
+          
+          // Fill the container if needed
+          fillContainerWithArticles();
+        });
+      }
+    }
+  
+    // New function to fill the container with articles if it's not full
+    function fillContainerWithArticles() {
+      // Keep adding articles until the container is filled or we run out of articles
+      while (container.scrollHeight <= container.clientHeight && articleQueue.length > 0) {
+        addNextArticle();
       }
     }
   
     // New helper function to ensure the main feed always has at least PRELOAD_COUNT articles preloaded.
     function ensureArticlesInQueue() {
-      if (articleQueue.length < PRELOAD_COUNT) {
-        preloadArticles(PRELOAD_COUNT - articleQueue.length);
+      const targetCount = PRELOAD_COUNT;
+      if (articleQueue.length < targetCount) {
+        // Preload more articles
+        preloadArticles(targetCount - articleQueue.length);
+        
+        // Preload images for ALL articles in the queue with high priority
+        articleQueue.forEach(article => {
+          if (article.originalimage && article.originalimage.source) {
+            const preloadImg = new Image();
+            preloadImg.fetchPriority = "high";
+            preloadImg.src = article.originalimage.source;
+          }
+        });
+        
+        // Also check for any visible cards that need image loading
+        preloadVisibleAndUpcomingImages();
       }
     }
   
@@ -122,15 +179,84 @@ document.addEventListener("DOMContentLoaded", function () {
         const spinner = document.createElement("div");
         spinner.className = "spinner";
         card.appendChild(spinner);
+        
+        // Store the image URL on the card for later retrieval if needed
+        card.dataset.imageUrl = article.originalimage.source;
+        
+        // Create image and set up loading
         const img = new Image();
-        img.src = article.originalimage.source;
-        img.onload = function () {
-          card.style.backgroundImage = `url(${article.originalimage.source})`;
-          spinner.remove();
-        };
-        img.onerror = function () {
-          spinner.remove();
-        };
+        let isLoaded = false;
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        function loadImage() {
+          // Set up error handling before setting src
+          img.onerror = function () {
+            if (retryCount < maxRetries) {
+              // Try loading again after a short delay
+              retryCount++;
+              setTimeout(loadImage, 1000);
+            } else {
+              // After max retries, show fallback
+              spinner.remove();
+              card.style.backgroundColor = "#333"; // Fallback color on error
+            }
+          };
+          
+          // Set up load handler
+          img.onload = function () {
+            isLoaded = true;
+            card.style.backgroundImage = `url(${article.originalimage.source})`;
+            spinner.remove();
+          };
+          
+          // Set the image src
+          img.src = article.originalimage.source;
+        }
+        
+        // Start loading the image
+        loadImage();
+        
+        // Add a timeout to handle stalled image loads
+        const imageTimeout = setTimeout(() => {
+          if (!isLoaded) {
+            if (retryCount < maxRetries) {
+              // Try again
+              retryCount++;
+              loadImage();
+            } else {
+              // After max retries, show fallback
+              spinner.remove();
+              card.style.backgroundColor = "#333"; // Fallback color on timeout
+            }
+          }
+        }, 5000); // 5 second timeout
+        
+        // Create a more aggressive intersection observer to watch when cards come into view
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              // Card is visible or about to be visible, prioritize this image
+              if (!isLoaded) {
+                // Force a high-priority load
+                const highPriorityImg = new Image();
+                highPriorityImg.fetchPriority = "high"; // Set high fetch priority
+                highPriorityImg.onload = function() {
+                  card.style.backgroundImage = `url(${article.originalimage.source})`;
+                  spinner.remove();
+                  isLoaded = true;
+                };
+                highPriorityImg.onerror = img.onerror;
+                highPriorityImg.src = article.originalimage.source;
+              }
+              observer.disconnect();
+            }
+          });
+        }, {
+          rootMargin: "500px 0px" // Increased to 500px to load earlier when scrolling fast
+        });
+        
+        observer.observe(card);
       } else {
         card.style.backgroundColor = "#333";
       }
@@ -271,8 +397,12 @@ document.addEventListener("DOMContentLoaded", function () {
         // Ensure that there are always at least PRELOAD_COUNT articles preloaded.
         ensureArticlesInQueue();
   
+        // Check if we need to add more articles to fill the screen
         if (container.scrollHeight <= container.clientHeight && articleQueue.length > 0) {
-          addNextArticle();
+          // Use setTimeout to allow the DOM to update before checking again
+          setTimeout(() => {
+            addNextArticle();
+          }, 0);
         }
       }
     }
@@ -1187,10 +1317,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // EVENT LISTENERS
     // --------------------
     container.addEventListener("scroll", function () {
-      // Use a larger threshold (200px) to preload main feed articles earlier.
-      if (container.scrollTop + container.clientHeight >= container.scrollHeight - 200) {
+      // Use a much larger threshold (800px) to preload main feed articles earlier
+      if (container.scrollTop + container.clientHeight >= container.scrollHeight - 800) {
         addNextArticle();
       }
+      
+      // Check for any cards that need image loading
+      preloadVisibleAndUpcomingImages();
+      
+      // Always ensure we have enough articles in the queue
       ensureArticlesInQueue();
     });
   
@@ -1379,5 +1514,35 @@ document.addEventListener("DOMContentLoaded", function () {
       e.stopPropagation();
       infoWindow.style.display = "none";
     });
+
+    // Add this function to preload images for visible and nearly-visible cards
+    function preloadVisibleAndUpcomingImages() {
+      // Get all article cards
+      const cards = document.querySelectorAll('.article-card');
+      
+      // Set up an observer to monitor cards
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const card = entry.target;
+          // If card has an image URL but no background image
+          if (card.dataset.imageUrl && !card.style.backgroundImage.includes(card.dataset.imageUrl)) {
+            // Force load the image
+            const img = new Image();
+            img.fetchPriority = "high";
+            img.onload = function() {
+              card.style.backgroundImage = `url(${card.dataset.imageUrl})`;
+              const spinner = card.querySelector('.spinner');
+              if (spinner) spinner.remove();
+            };
+            img.src = card.dataset.imageUrl;
+          }
+        });
+      }, {
+        rootMargin: "1000px 0px" // Check cards up to 1000px away
+      });
+      
+      // Observe all cards
+      cards.forEach(card => observer.observe(card));
+    }
   });
   
